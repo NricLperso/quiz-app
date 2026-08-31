@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#4f46e5" />
+  <title>Quiz — Solo & Duel</title>
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon-192.png" />
+  <!-- iOS : app plein écran depuis l'écran d'accueil -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Quiz" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app" class="app">
+
+    <!-- ACCUEIL -->
+    <section id="screen-home" class="screen active">
+      <div class="hero">
+        <h1 class="logo">🎯 Quiz</h1>
+        <p class="tagline">Prends des risques, gagne des points.</p>
+      </div>
+      <div class="mode-grid">
+        <button class="mode-card" data-mode="solo">
+          <span class="mode-emoji">🧍</span>
+          <span class="mode-name">Solo</span>
+          <span class="mode-desc">Joue seul, bats ton score.</span>
+        </button>
+        <button class="mode-card" data-mode="duel">
+          <span class="mode-emoji">🤝</span>
+          <span class="mode-name">Duel</span>
+          <span class="mode-desc">2 joueurs, même appareil.</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- CONFIG -->
+    <section id="screen-config" class="screen">
+      <button class="back-btn" data-nav="home">‹ Retour</button>
+      <h2 id="config-title">Configuration</h2>
+
+      <div class="block">
+        <h3>Source des questions</h3>
+        <div id="source-list" class="chip-list"></div>
+        <p id="source-hint" class="hint" style="color:var(--muted)"></p>
+      </div>
+
+      <div id="pseudos-block" class="block hidden">
+        <h3>Pseudos</h3>
+        <input type="text" id="p1-name" class="text-input" maxlength="20" placeholder="Joueur 1" autocomplete="off" />
+        <input type="text" id="p2-name" class="text-input" maxlength="20" placeholder="Joueur 2" autocomplete="off" />
+      </div>
+
+      <div class="block">
+        <h3>Thèmes</h3>
+        <div id="theme-list" class="chip-list"></div>
+      </div>
+
+      <div class="block">
+        <h3>Difficulté</h3>
+        <div id="difficulty-list" class="chip-list"></div>
+      </div>
+
+      <div class="block">
+        <h3>Nombre de questions</h3>
+        <div id="count-list" class="chip-list"></div>
+      </div>
+
+      <p id="config-hint" class="hint"></p>
+      <button id="start-btn" class="primary-btn">Commencer</button>
+    </section>
+
+    <!-- PASSATION (duel) -->
+    <section id="screen-pass" class="screen">      <div class="pass-box">
+        <span class="pass-emoji">📲</span>
+        <h2 id="pass-title">Passe le téléphone</h2>
+        <p id="pass-sub"></p>
+        <button id="ready-btn" class="primary-btn">Je suis prêt</button>
+      </div>
+    </section>
+
+    <!-- QUESTION -->
+    <section id="screen-question" class="screen">
+      <header class="q-header">
+        <span id="q-player" class="q-player"></span>
+        <div class="q-progress"><span id="q-index"></span></div>
+        <div id="timer" class="timer">15</div>
+      </header>
+      <div class="streak" id="streak-badge"></div>
+
+      <div class="q-meta">
+        <span id="q-theme" class="tag"></span>
+        <span id="q-diff" class="tag tag-diff"></span>
+      </div>
+      <p id="q-text" class="q-text"></p>
+
+      <!-- Choix du mode de réponse -->
+      <div id="mode-choice" class="mode-choice">
+        <p class="mode-choice-label">Comment veux-tu répondre ?</p>
+        <div class="risk-grid">
+          <button class="risk-btn" data-answermode="binary">
+            <span class="risk-name">Duel</span>
+            <span class="risk-desc">2 choix</span>
+            <span class="risk-pts">1 pt</span>
+          </button>
+          <button class="risk-btn" data-answermode="square">
+            <span class="risk-name">Carré</span>
+            <span class="risk-desc">4 choix</span>
+            <span class="risk-pts">2 pts</span>
+          </button>
+          <button class="risk-btn" data-answermode="cash">
+            <span class="risk-name">Cash</span>
+            <span class="risk-desc">sans choix</span>
+            <span class="risk-pts">4 pts</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Zone de réponse -->
+      <div id="answer-zone" class="answer-zone hidden"></div>
+    </section>
+
+    <!-- REVELATION (correction) -->
+    <section id="screen-reveal" class="screen">
+      <h2 class="reveal-title">Correction</h2>
+      <p id="reveal-question" class="reveal-question"></p>
+      <div class="reveal-answer">
+        <span class="reveal-label">Bonne réponse</span>
+        <span id="reveal-correct" class="reveal-correct"></span>
+      </div>
+      <p id="reveal-explanation" class="reveal-explanation"></p>
+      <div id="reveal-players" class="reveal-players"></div>
+      <button id="next-btn" class="primary-btn"></button>
+    </section>
+
+    <!-- RESULTATS -->
+    <section id="screen-results" class="screen">
+      <h2 class="results-title">🏁 Fin de partie</h2>
+      <div id="results-winner" class="results-winner"></div>
+      <div id="results-body" class="results-body"></div>
+      <button id="replay-btn" class="primary-btn">Rejouer</button>
+      <button class="ghost-btn" data-nav="home">Accueil</button>
+    </section>
+
+  </div>
+
+  <script src="questions.js"></script>
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+    }
+  </script>
+</body>
+</html>
