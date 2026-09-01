@@ -14,7 +14,7 @@ Application web (PWA) de quiz en français : joue en **solo** ou en **duel local
   | Carré | 4 choix | 2 pts |
   | Cash | saisie libre | 4 pts |
   Aucune pénalité en cas d'erreur.
-- **Chrono 15 s** par question et par joueur.
+- **Chrono 30 s** par question et par joueur.
 - **Compteur de série** (streak) incitatif.
 - **Config** : thème(s), difficulté (★ à ★★★), nombre de questions (5/10/15/20).
 - **Deux sources de questions** :

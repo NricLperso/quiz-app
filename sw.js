@@ -1,5 +1,5 @@
 // Service worker — cache app shell (offline-ready). Le mode "En direct" reste en ligne.
-const CACHE = 'quiz-v1';
+const CACHE = 'quiz-v2';
 const ASSETS = [
   './',
   './index.html',

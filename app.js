@@ -8,7 +8,7 @@
 const POINTS = { binary: 1, square: 2, cash: 4 };
 const MODE_LABEL = { binary: 'Duel', square: 'Carré', cash: 'Cash' };
 const COUNTS = [5, 10, 15, 20];
-const TIMER_SECONDS = 15;
+const TIMER_SECONDS = 30;
 
 const BANK = Array.isArray(window.QUESTIONS) ? window.QUESTIONS : [];
 
@@ -39,6 +39,51 @@ function shuffle(arr) {
   return a;
 }
 function stars(n) { return '★'.repeat(n) + '☆'.repeat(3 - n); }
+
+/* ---------- Mode Cash : matching tolérant + indice de format ---------- */
+const CASH_STOPWORDS = new Set(['le','la','les','l','un','une','des','du','de','d','a','au','aux','the','of','et','ou','en','dans','sur']);
+
+// Tokens significatifs (hors articles/prépositions) d'une réponse normalisée.
+function significantTokens(str) {
+  return normalize(str).split(' ').filter((t) => t && !CASH_STOPWORDS.has(t));
+}
+
+// La réponse cash est-elle acceptée ? Tolère nom de famille / mot-clé principal.
+function cashMatches(given, answer, acceptedAnswers) {
+  const g = normalize(given);
+  if (!g) return false;
+
+  // 1) correspondances exactes (réponse, alias, réponse sans article)
+  const exact = new Set([answer, ...(acceptedAnswers || [])].map(normalize));
+  const noArticle = normalize(answer).replace(/^(le|la|les|l|un|une|des|du|de|d) /, '');
+  exact.add(noArticle);
+  if (exact.has(g)) return true;
+
+  // 2) forme compacte (réponse sans articles/prépositions internes) : "bataille de waterloo" -> "bataille waterloo"
+  const sig = significantTokens(answer);
+  if (sig.length && g === sig.join(' ')) return true;
+
+  // 3) dernier mot significatif = nom de famille / mot-clé (ex. "Albert Einstein" -> "einstein")
+  const last = sig[sig.length - 1];
+  if (last && last.length >= 3 && g === last) return true;
+
+  // 4) premier mot significatif si la réponse est un nom composé de 2 mots (ex. "Marie Curie" -> "marie")
+  if (sig.length === 2 && sig[0].length >= 3 && g === sig[0]) return true;
+
+  return false;
+}
+
+// Indice de format affiché en mode cash, sans révéler les lettres.
+function cashHint(answer) {
+  const raw = String(answer).trim();
+  if (/^[0-9\s.,]+$/.test(raw)) return 'Réponse attendue : un nombre.';
+  const words = raw.split(/\s+/).filter(Boolean);
+  const counts = words.map((w) => w.replace(/[^\p{L}\p{N}]/gu, '').length).filter((n) => n > 0);
+  const lettres = counts.join(' · ');
+  const nb = words.length;
+  const base = `Format : ${nb} mot${nb > 1 ? 's' : ''} (${lettres} lettre${counts.length > 1 || counts[0] > 1 ? 's' : ''}).`;
+  return nb > 1 ? base + ' Le nom de famille ou mot-clé suffit.' : base;
+}
 
 /* ---------- State ---------- */
 const state = {
@@ -386,7 +431,7 @@ function chooseAnswerMode(answerMode) {
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
     const hint = document.createElement('p');
     hint.className = 'cash-hint';
-    hint.textContent = 'Écris la réponse exacte. Les accents et la casse sont ignorés.';
+    hint.textContent = cashHint(q.choices[0]);
     row.append(input, btn, hint);
     zone.appendChild(row);
     input.focus();
@@ -418,8 +463,8 @@ function startTimer() {
   state.timerId = setInterval(() => {
     left--;
     t.textContent = left;
-    t.classList.toggle('warn', left <= 7 && left > 3);
-    t.classList.toggle('danger', left <= 3);
+    t.classList.toggle('warn', left <= 10 && left > 5);
+    t.classList.toggle('danger', left <= 5);
     if (left <= 0) {
       clearInterval(state.timerId);
       finalizeAnswer(null, null, true); // timeout
@@ -436,8 +481,7 @@ function finalizeAnswer(answerMode, given, timedOut = false) {
   let correct = false;
   if (!timedOut && answerMode) {
     if (answerMode === 'cash') {
-      const accepted = new Set([q.choices[0], ...(q.acceptedAnswers || [])].map(normalize));
-      correct = accepted.has(normalize(given));
+      correct = cashMatches(given, q.choices[0], q.acceptedAnswers);
     } else {
       correct = normalize(given) === normalize(q.choices[0]);
     }
